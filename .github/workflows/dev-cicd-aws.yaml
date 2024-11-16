@@ -68,24 +68,24 @@ jobs:
             health:
               show-details: always
         EOF
-    # - name: 테스트 수행
-    #   run: ./gradlew test
+    - name: 테스트 수행
+      run: ./gradlew test
 
-    # - name: 테스트 검사 후 실패 시 파이프라인 중단
-    #   if: failure()
-    #   run: |
-    #     echo "Tests failed! Pipeline will be stopped."
-    #     exit 1
+    - name: 테스트 검사 후 실패 시 파이프라인 중단
+      if: failure()
+      run: |
+        echo "Tests failed! Pipeline will be stopped."
+        exit 1
 
-    # - name: 테스트 결과를 STEP Summary 에 업로드
-    #   if: always()
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: test-report
-    #     path: |                    # 여러 경로 지정
-    #       **/build/reports/tests/test/
-    #       **/build/test-results/test/
-    #     retention-days: 30
+    - name: 테스트 결과를 STEP Summary 에 업로드
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-report
+        path: |                    # 여러 경로 지정
+          **/build/reports/tests/test/
+          **/build/test-results/test/
+        retention-days: 30
 
     - name: Generate Basic Info in Markdown
       run: |
@@ -156,3 +156,42 @@ jobs:
         else
           echo "No SARIF results file found." >> $GITHUB_STEP_SUMMARY
         fi
+
+  build-and-upload:
+    # needs: [verify-pipeline]  # 기존 검증 후 실행
+    runs-on: ubuntu-latest
+    #environment: ${{ github.ref == 'refs/heads/main' && 'prd' || 'dev' }}
+    environment: dev
+    
+    steps:
+      - name: 배포용 소스 다운로드
+        uses: actions/checkout@v4
+
+      - name: 개발용 application.yml 생성
+        run: |
+          cat > src/main/resources/application.yml << EOF
+          spring:
+            datasource:
+              url: ${{ secrets.DATABASE_URL }} # 예dbc:mysql://localhost:3306/istory
+              username: ${{ secrets.MYSQL_USERNAME }}
+              password: ${{ secrets.MYSQL_PASSWORD }}
+              driver-class-name: com.mysql.cj.jdbc.Driver
+            jpa:
+              database-platform: org.hibernate.dialect.MySQL8Dialect
+              hibernate:
+                ddl-auto: update
+              show-sql: true
+            application:
+              name: USER-SERVICE
+            jwt:
+              issuer: user@gmail.com
+              secret_key: study-springboot
+          management:
+            endpoints:
+              web:
+                exposure:
+                  include: health,info
+            endpoint:
+              health:
+                show-details: always
+          EOF
