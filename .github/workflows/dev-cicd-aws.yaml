@@ -84,4 +84,4 @@ jobs:
         path: |                    # 여러 경로 지정
           **/build/reports/tests/test/
           **/build/test-results/test/
-        retention-days: 30 
+        retention-days: 30
