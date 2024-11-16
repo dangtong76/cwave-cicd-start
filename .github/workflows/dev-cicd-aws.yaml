@@ -1,33 +1,33 @@
-name: istory ci/cd dev pipeline
+ name: istory ci/cd pipeline
 
 on:
   push:
-    branches: [ "develop" ]
+    branches: [ "develop","main" ]
   pull_request:
-    branches: [ "develop" ]
+    branches: [ "develop","main" ]
 jobs:
-  verify_pipeline:
+  verify-pipeline:
     environment: runner
-  runs-on: ubuntu-lastest
-  services:
-    mysql:
-      image: mysql:8.0
-      env:
-        # root 계정 비밀번호
-        MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
-        # 사용자 계정
-        MYSQL_USER: ${{ secrets.MYSQL_USER }}
-        # 사용자 계정 비밀번호
-        MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
-        # 사용자 계정 데이터베이스
-        MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
-      ports:
-        - 3306:3306
-      options: >-
-        --health-cmd="mysqladmin ping"
-        --health-interval=10s
-        --health-timeout=5s
-        --health-retries=3
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          # root 계정 비밀번호
+          MYSQL_ROOT_PASSWORD: ${{ secrets.MYSQL_ROOT_PASSWORD }}
+          # 사용자 계정
+          MYSQL_USER: ${{ secrets.MYSQL_USER }}
+          # 사용자 계정 비밀번호
+          MYSQL_PASSWORD: ${{ secrets.MYSQL_PASSWORD }}
+          # 사용자 계정 데이터베이스
+          MYSQL_DATABASE: ${{ secrets.MYSQL_DATABASE }}
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
     steps:
     - name: Source Code Checkout
       uses: actions/checkout@v4 
@@ -45,7 +45,7 @@ jobs:
       run: |
         echo "Tests failed! Pipeline will be stopped."
         exit 1
-    
+
     - name: Upload Test Report
       if: always()
       uses: actions/upload-artifact@v4
